@@ -216,7 +216,7 @@ npm run build
 
 ## Contact
 
-Your Name - Bhargav.Raj2@ibm.com
+Bhargav.Raj2@ibm.com
 Project Link: [https://github.com/yourusername/blu-reserve](https://github.com/Starlord-IBM/blu-reserve)
 
 ---
