@@ -1,24 +1,21 @@
 import subprocess
-import sys
+import time
 import os
 from threading import Thread
-import time
 
 def run_backend():
-    """Run the FastAPI backend"""
     try:
         os.chdir("backend")
-        subprocess.run(["uvicorn", "app.main:app", "--reload", "--port", "8000"])
+        subprocess.run(["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"])
     except Exception as e:
         print(f"Backend Error: {e}")
     finally:
         os.chdir("..")
 
 def run_frontend():
-    """Run the Streamlit frontend"""
     try:
         os.chdir("frontend")
-        subprocess.run(["streamlit", "run", "app.py", "--server.port", "8501"])
+        subprocess.run(["npm", "start"])
     except Exception as e:
         print(f"Frontend Error: {e}")
     finally:
@@ -34,7 +31,16 @@ def main():
     time.sleep(2)
 
     # Start frontend
-    run_frontend()
+    frontend_thread = Thread(target=run_frontend)
+    frontend_thread.daemon = True
+    frontend_thread.start()
+
+    try:
+        # Keep the main thread alive
+        while True:
+            time.sleep(1)
+    except KeyboardInterrupt:
+        print("\nShutting down...")
 
 if __name__ == "__main__":
     main()
