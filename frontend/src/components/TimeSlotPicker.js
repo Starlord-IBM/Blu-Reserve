@@ -1,84 +1,104 @@
 import React from 'react';
+import { format, parseISO } from 'date-fns';
 
-const TimeSlotPicker = ({ timeSlots, selectedTime, selectedDuration, onTimeSelect, onDurationChange }) => {
-  return (
-    <div style={styles.container}>
-      <div style={styles.timeSlots}>
-        {timeSlots.map((slot) => (
-          <div
-            key={slot.start_time}
-            style={{
-              ...styles.timeSlot,
-              backgroundColor: selectedTime === slot.start_time ? '#2ecc71' : '#3498db',
-            }}
-            onClick={() => onTimeSelect(slot.start_time)}
-          >
-            {new Date(slot.start_time).toLocaleTimeString([], { 
-              hour: '2-digit', 
-              minute: '2-digit' 
-            })}
-          </div>
-        ))}
-      </div>
-      
-      {selectedTime && (
-        <div style={styles.durationContainer}>
-          <label style={styles.label}>Duration (minutes):</label>
-          <input
-            type="range"
-            min="10"
-            max="120"
-            step="5"
-            value={selectedDuration}
-            onChange={(e) => onDurationChange(parseInt(e.target.value))}
-            style={styles.slider}
-          />
-          <span style={styles.durationDisplay}>{selectedDuration} minutes</span>
+const TimeSlotPicker = ({ 
+    availableSlots, 
+    selectedSlot, 
+    selectedDuration, 
+    onSlotSelect, 
+    onDurationChange 
+}) => {
+    return (
+        <div style={styles.container}>
+            <div style={styles.slotsGrid}>
+                {availableSlots.map((slot, index) => (
+                    <div
+                        key={index}
+                        style={{
+                            ...styles.slot,
+                            backgroundColor: selectedSlot?.start_time === slot.start_time 
+                                ? '#2ecc71' 
+                                : '#3498db'
+                        }}
+                        onClick={() => onSlotSelect(slot)}
+                    >
+                        {format(parseISO(slot.start_time), 'HH:mm')}
+                    </div>
+                ))}
+            </div>
+
+            {selectedSlot && (
+                <div style={styles.durationContainer}>
+                    <label style={styles.label}>
+                        Duration: {selectedDuration} minutes
+                    </label>
+                    <input
+                        type="range"
+                        min={30}
+                        max={120}
+                        step={30}
+                        value={selectedDuration}
+                        onChange={(e) => onDurationChange(parseInt(e.target.value))}
+                        style={styles.slider}
+                    />
+                    <div style={styles.durationDisplay}>
+                        {format(parseISO(selectedSlot.start_time), 'HH:mm')} - 
+                        {format(
+                            parseISO(selectedSlot.start_time).getTime() + 
+                            selectedDuration * 60000, 
+                            'HH:mm'
+                        )}
+                    </div>
+                </div>
+            )}
         </div>
-      )}
-    </div>
-  );
+    );
 };
 
 const styles = {
-  container: {
-    padding: '20px',
-    border: '1px solid #ddd',
-    borderRadius: '8px',
-    backgroundColor: 'white',
-  },
-  timeSlots: {
-    display: 'grid',
-    gridTemplateColumns: 'repeat(auto-fill, minmax(100px, 1fr))',
-    gap: '10px',
-  },
-  timeSlot: {
-    padding: '10px',
-    textAlign: 'center',
-    borderRadius: '4px',
-    color: 'white',
-    cursor: 'pointer',
-    transition: 'all 0.3s ease',
-  },
-  durationContainer: {
-    marginTop: '20px',
-    padding: '15px',
-    backgroundColor: '#f8f9fa',
-    borderRadius: '4px',
-  },
-  label: {
-    display: 'block',
-    marginBottom: '10px',
-    color: '#2c3e50',
-  },
-  slider: {
-    width: '100%',
-    marginBottom: '10px',
-  },
-  durationDisplay: {
-    color: '#2c3e50',
-    fontWeight: 'bold',
-  },
+    container: {
+        padding: '20px',
+        backgroundColor: 'white',
+        borderRadius: '8px',
+        boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+    },
+    title: {
+        marginBottom: '15px',
+        color: '#2c3e50',
+    },
+    slotsGrid: {
+        display: 'grid',
+        gridTemplateColumns: 'repeat(auto-fill, minmax(80px, 1fr))',
+        gap: '10px',
+        marginBottom: '20px',
+    },
+    slot: {
+        padding: '10px',
+        textAlign: 'center',
+        color: 'white',
+        borderRadius: '4px',
+        cursor: 'pointer',
+        transition: 'all 0.3s ease',
+    },
+    durationContainer: {
+        padding: '15px',
+        backgroundColor: '#f8f9fa',
+        borderRadius: '4px',
+    },
+    label: {
+        display: 'block',
+        marginBottom: '10px',
+        color: '#2c3e50',
+    },
+    slider: {
+        width: '100%',
+        marginBottom: '10px',
+    },
+    durationDisplay: {
+        textAlign: 'center',
+        color: '#2c3e50',
+        fontWeight: 'bold',
+    },
 };
 
 export default TimeSlotPicker;

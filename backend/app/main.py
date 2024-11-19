@@ -3,7 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 import uvicorn
 from datetime import datetime
 from app.database import connect_to_mongodb, close_mongodb_connection
-from app.routers import locations, seats, bookings
+from app.routers import locations, seats, bookings, timeslots
 
 app = FastAPI(
     title="Blu-Reserve API",
@@ -51,6 +51,7 @@ app.include_router(
     prefix="/api/bookings",
     tags=["bookings"]
 )
+app.include_router(timeslots.router, prefix="/api/timeslots", tags=["timeslots"])
 
 # Root endpoint
 @app.get("/")

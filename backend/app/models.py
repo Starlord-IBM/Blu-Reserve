@@ -1,54 +1,26 @@
-from pydantic import BaseModel, Field, ConfigDict, GetJsonSchemaHandler
-from pydantic.json_schema import JsonSchemaValue
-from typing import List, Optional, Any, Annotated
-from datetime import datetime
-from bson import ObjectId
+from datetime import datetime, timedelta
+from typing import List, Optional, Dict
+from pydantic import BaseModel, Field, ConfigDict, validator
 
-class PyObjectId(ObjectId):
-    @classmethod
-    def __get_validators__(cls):
-        yield cls.validate
+class OperatingHours(BaseModel):
+    start: str  # Format: "HH:MM"
+    end: str    # Format: "HH:MM"
+    
+    @validator('start', 'end')
+    def validate_time_format(cls, v):
+        try:
+            hour, minute = map(int, v.split(':'))
+            if not (0 <= hour <= 23 and 0 <= minute <= 59):
+                raise ValueError
+            return f"{hour:02d}:{minute:02d}"
+        except:
+            raise ValueError("Time must be in HH:MM format")
 
-    @classmethod
-    def validate(cls, v):
-        if not ObjectId.is_valid(v):
-            raise ValueError("Invalid ObjectId")
-        return ObjectId(v)
-
-    @classmethod
-    def __get_pydantic_core_schema__(
-        cls,
-        _source_type: Any,
-        _handler: Any,
-    ) -> dict[str, Any]:
-        return {
-            'type': 'string',
-            'description': 'ObjectId',
-            'pattern': r'^[0-9a-fA-F]{24}$'
-        }
-
-# Floor Configuration Model
 class FloorConfig(BaseModel):
     floor_number: int
     total_seats: int
     sections: List[str]
-    has_pool: bool
-    special_features: List[str]
-    
-    model_config = ConfigDict(
-        populate_by_name=True,
-        json_schema_extra={
-            "example": {
-                "floor_number": 1,
-                "total_seats": 100,
-                "sections": ["A", "B", "C"],
-                "has_pool": False,
-                "special_features": ["window_view"]
-            }
-        }
-    )
 
-# Location Model
 class Location(BaseModel):
     id: Optional[str] = Field(default=None, alias="_id")
     location_code: str
@@ -56,93 +28,63 @@ class Location(BaseModel):
     address: str
     total_floors: int
     floors_config: List[FloorConfig]
-    operating_hours: dict
-    status: str
+    operating_hours: OperatingHours
+    status: str = "active"  # active, inactive, maintenance
 
-    model_config = ConfigDict(
-        populate_by_name=True,
-        arbitrary_types_allowed=True,
-        json_schema_extra={
-            "example": {
-                "location_code": "BLR-01",
-                "name": "Bangalore Main Cafeteria",
-                "address": "123 Tech Park, Bangalore",
-                "total_floors": 3,
-                "floors_config": [{
-                    "floor_number": 1,
-                    "total_seats": 100,
-                    "sections": ["A", "B", "C"],
-                    "has_pool": False,
-                    "special_features": ["window_view"]
-                }],
-                "operating_hours": {
-                    "start": "09:00",
-                    "end": "18:00"
-                },
-                "status": "active"
-            }
-        }
-    )
+    model_config = ConfigDict(arbitrary_types_allowed=True)
 
-# Seat Model
+class TimeSlot(BaseModel):
+    start_time: datetime
+    duration_minutes: int = Field(ge=10, le=120)
+
+    @validator('duration_minutes')
+    def validate_duration(cls, v):
+        if v % 5 != 0:  # Ensure duration is in multiples of 5 minutes
+            raise ValueError('Duration must be in multiples of 5 minutes')
+        return v
+
+    @property
+    def end_time(self) -> datetime:
+        return self.start_time + timedelta(minutes=self.duration_minutes)
+
+    model_config = ConfigDict(arbitrary_types_allowed=True)
+
 class Seat(BaseModel):
     id: Optional[str] = Field(default=None, alias="_id")
     location_id: str
     seat_number: str
     floor: int
     section: str
-    position: dict
-    seat_type: str
-    status: str
-    maintenance_status: str
+    position: Dict[str, float]  # x, y coordinates
+    status: str = "available"  # available, maintenance, reserved
+    is_available: bool = True
 
-    model_config = ConfigDict(
-        populate_by_name=True,
-        arbitrary_types_allowed=True,
-        json_schema_extra={
-            "example": {
-                "location_id": "1234567890",
-                "seat_number": "A101",
-                "floor": 1,
-                "section": "A",
-                "position": {"x": 10, "y": 20, "angle": 0},
-                "seat_type": "regular",
-                "status": "available",
-                "maintenance_status": "operational"
-            }
-        }
-    )
+    model_config = ConfigDict(arbitrary_types_allowed=True)
 
-# Booking Model
 class Booking(BaseModel):
     id: Optional[str] = Field(default=None, alias="_id")
     location_id: str
-    manager_id: str
-    team_members: List[str]
-    seats: List[str]
+    user_id: str
+    seat_ids: List[str]  # Changed from seat_id to seat_ids for multiple seats
+    number_of_people: int = Field(ge=1, le=20)  # Maximum 20 people
     booking_date: datetime
-    time_slot: dict
-    amount_paid: float
-    status: str
-    check_in_status: str
+    time_slot: TimeSlot
+    status: str = "active"  # active, completed, cancelled
+    check_in_time: Optional[datetime] = None
+    check_out_time: Optional[datetime] = None
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+    updated_at: Optional[datetime] = None
 
-    model_config = ConfigDict(
-        populate_by_name=True,
-        arbitrary_types_allowed=True,
-        json_schema_extra={
-            "example": {
-                "location_id": "1234567890",
-                "manager_id": "MGR001",
-                "team_members": ["EMP001", "EMP002"],
-                "seats": ["A101", "A102"],
-                "booking_date": "2024-01-01T12:00:00",
-                "time_slot": {
-                    "start": "12:00",
-                    "end": "13:00"
-                },
-                "amount_paid": 50.0,
-                "status": "confirmed",
-                "check_in_status": "not_checked_in"
-            }
-        }
-    )
+    @validator('number_of_people')
+    def validate_number_of_people(cls, v):
+        if v < 1 or v > 20:
+            raise ValueError('Number of people must be between 1 and 20')
+        return v
+
+    @validator('seat_ids')
+    def validate_seats_count(cls, v, values):
+        if 'number_of_people' in values and len(v) != values['number_of_people']:
+            raise ValueError('Number of selected seats must match number of people')
+        return v
+
+    model_config = ConfigDict(arbitrary_types_allowed=True)

@@ -20,10 +20,25 @@ def get_bookings(
     }))
     return bookings
 
-@router.post("/", response_model=Booking)
-def create_booking(booking: Booking, db=Depends(get_database)):
-    booking_dict = booking.dict(exclude={"id"})
-    booking_dict["created_at"] = datetime.utcnow()
-    result = db.bookings.insert_one(booking_dict)
-    created_booking = db.bookings.find_one({"_id": result.inserted_id})
-    return created_booking
+@router.post("/")
+async def create_booking(booking: Booking, db=Depends(get_database)):
+    try:
+        # Validate booking time is in the future
+        if booking.time_slot.start_time <= datetime.now():
+            raise HTTPException(
+                status_code=400, 
+                detail="Booking time must be in the future"
+            )
+
+        # Convert booking data to dict for MongoDB
+        booking_dict = booking.model_dump(exclude={"id"})
+        
+        # Insert booking
+        result = db.bookings.insert_one(booking_dict)
+        
+        # Return created booking
+        created_booking = db.bookings.find_one({"_id": result.inserted_id})
+        return Booking(**created_booking)
+
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
