@@ -1,104 +1,88 @@
 import React from 'react';
-import { format, parseISO } from 'date-fns';
+import { 
+    Box, 
+    FormControl, 
+    InputLabel, 
+    MenuItem, 
+    Select, 
+    Typography 
+} from '@mui/material';
+import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
+import { LocalizationProvider, DatePicker } from '@mui/x-date-pickers';
 
 const TimeSlotPicker = ({ 
-    availableSlots, 
-    selectedSlot, 
+    selectedDate, 
+    selectedTime, 
     selectedDuration, 
-    onSlotSelect, 
+    onDateChange, 
+    onTimeChange, 
     onDurationChange 
 }) => {
+    // Available time slots from 9 AM to 9 PM
+    const timeSlots = Array.from({ length: 13 }, (_, i) => {
+        const hour = i + 9;
+        return {
+            value: `${hour}:00`,
+            label: `${hour > 12 ? hour - 12 : hour}:00 ${hour >= 12 ? 'PM' : 'AM'}`
+        };
+    });
+
+    const durations = [
+        { value: 30, label: '30 minutes' },
+        { value: 60, label: '1 hour' },
+        { value: 90, label: '1.5 hours' },
+        { value: 120, label: '2 hours' }
+    ];
+
     return (
-        <div style={styles.container}>
-            <div style={styles.slotsGrid}>
-                {availableSlots.map((slot, index) => (
-                    <div
-                        key={index}
-                        style={{
-                            ...styles.slot,
-                            backgroundColor: selectedSlot?.start_time === slot.start_time 
-                                ? '#2ecc71' 
-                                : '#3498db'
-                        }}
-                        onClick={() => onSlotSelect(slot)}
-                    >
-                        {format(parseISO(slot.start_time), 'HH:mm')}
-                    </div>
-                ))}
-            </div>
-
-            {selectedSlot && (
-                <div style={styles.durationContainer}>
-                    <label style={styles.label}>
-                        Duration: {selectedDuration} minutes
-                    </label>
-                    <input
-                        type="range"
-                        min={30}
-                        max={120}
-                        step={30}
-                        value={selectedDuration}
-                        onChange={(e) => onDurationChange(parseInt(e.target.value))}
-                        style={styles.slider}
+        <Box sx={{ mb: 4 }}>
+            <Typography variant="h6" sx={{ mb: 2 }}>
+                Select Date and Time
+            </Typography>
+            
+            <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
+                <LocalizationProvider dateAdapter={AdapterDateFns}>
+                    <DatePicker
+                        label="Booking Date"
+                        value={selectedDate}
+                        onChange={onDateChange}
+                        minDate={new Date()}
+                        sx={{ minWidth: 200 }}
                     />
-                    <div style={styles.durationDisplay}>
-                        {format(parseISO(selectedSlot.start_time), 'HH:mm')} - 
-                        {format(
-                            parseISO(selectedSlot.start_time).getTime() + 
-                            selectedDuration * 60000, 
-                            'HH:mm'
-                        )}
-                    </div>
-                </div>
-            )}
-        </div>
-    );
-};
+                </LocalizationProvider>
 
-const styles = {
-    container: {
-        padding: '20px',
-        backgroundColor: 'white',
-        borderRadius: '8px',
-        boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
-    },
-    title: {
-        marginBottom: '15px',
-        color: '#2c3e50',
-    },
-    slotsGrid: {
-        display: 'grid',
-        gridTemplateColumns: 'repeat(auto-fill, minmax(80px, 1fr))',
-        gap: '10px',
-        marginBottom: '20px',
-    },
-    slot: {
-        padding: '10px',
-        textAlign: 'center',
-        color: 'white',
-        borderRadius: '4px',
-        cursor: 'pointer',
-        transition: 'all 0.3s ease',
-    },
-    durationContainer: {
-        padding: '15px',
-        backgroundColor: '#f8f9fa',
-        borderRadius: '4px',
-    },
-    label: {
-        display: 'block',
-        marginBottom: '10px',
-        color: '#2c3e50',
-    },
-    slider: {
-        width: '100%',
-        marginBottom: '10px',
-    },
-    durationDisplay: {
-        textAlign: 'center',
-        color: '#2c3e50',
-        fontWeight: 'bold',
-    },
+                <FormControl sx={{ minWidth: 200 }}>
+                    <InputLabel>Time</InputLabel>
+                    <Select
+                        value={selectedTime}
+                        label="Time"
+                        onChange={(e) => onTimeChange(e.target.value)}
+                    >
+                        {timeSlots.map((slot) => (
+                            <MenuItem key={slot.value} value={slot.value}>
+                                {slot.label}
+                            </MenuItem>
+                        ))}
+                    </Select>
+                </FormControl>
+
+                <FormControl sx={{ minWidth: 200 }}>
+                    <InputLabel>Duration</InputLabel>
+                    <Select
+                        value={selectedDuration}
+                        label="Duration"
+                        onChange={(e) => onDurationChange(e.target.value)}
+                    >
+                        {durations.map((duration) => (
+                            <MenuItem key={duration.value} value={duration.value}>
+                                {duration.label}
+                            </MenuItem>
+                        ))}
+                    </Select>
+                </FormControl>
+            </Box>
+        </Box>
+    );
 };
 
 export default TimeSlotPicker;

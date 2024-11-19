@@ -1,109 +1,128 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link as RouterLink } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
+import {
+    Box,
+    Button,
+    TextField,
+    Typography,
+    Container,
+    Alert,
+    Link,
+    Paper,
+    CircularProgress
+} from '@mui/material';
 
 const Login = () => {
-  const [credentials, setCredentials] = useState({ username: '', password: '' });
-  const [error, setError] = useState('');
-  const navigate = useNavigate();
+    const [email, setEmail] = useState('');
+    const [password, setPassword] = useState('');
+    const [error, setError] = useState('');
+    const [loading, setLoading] = useState(false);
+    const { login } = useAuth();
+    const navigate = useNavigate();
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    
-    // For testing purposes, using mock login
-    // Replace this with actual API call later
-    if (credentials.username && credentials.password) {
-      // Mock successful login
-      localStorage.setItem('token', 'mock-token');
-      localStorage.setItem('userId', 'mock-user-id');
-      navigate('/book-seats');
-    } else {
-      setError('Please enter both username and password');
-    }
-  };
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        if (!email || !password) {
+            setError('Please fill in all fields');
+            return;
+        }
 
-  return (
-    <div style={styles.container}>
-      <div style={styles.loginBox}>
-        <h1 style={styles.title}>Blu-Reserve Login</h1>
-        
-        {error && <div style={styles.error}>{error}</div>}
-        
-        <form onSubmit={handleSubmit} style={styles.form}>
-          <input
-            type="text"
-            placeholder="Username"
-            value={credentials.username}
-            onChange={(e) => setCredentials({ ...credentials, username: e.target.value })}
-            style={styles.input}
-          />
-          
-          <input
-            type="password"
-            placeholder="Password"
-            value={credentials.password}
-            onChange={(e) => setCredentials({ ...credentials, password: e.target.value })}
-            style={styles.input}
-          />
-          
-          <button type="submit" style={styles.button}>
-            Login
-          </button>
-        </form>
-      </div>
-    </div>
-  );
-};
+        try {
+            setError('');
+            setLoading(true);
+            await login(email, password);
+            navigate('/');
+        } catch (err) {
+            console.error('Login error:', err);
+            setError(err?.response?.data?.detail || 'Failed to login. Please check your credentials.');
+        } finally {
+            setLoading(false);
+        }
+    };
 
-const styles = {
-  container: {
-    display: 'flex',
-    justifyContent: 'center',
-    alignItems: 'center',
-    minHeight: '100vh',
-    backgroundColor: '#f5f6fa',
-  },
-  loginBox: {
-    backgroundColor: 'white',
-    padding: '2rem',
-    borderRadius: '8px',
-    boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
-    width: '100%',
-    maxWidth: '400px',
-  },
-  title: {
-    textAlign: 'center',
-    marginBottom: '2rem',
-    color: '#2c3e50',
-  },
-  form: {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '1rem',
-  },
-  input: {
-    padding: '0.75rem',
-    borderRadius: '4px',
-    border: '1px solid #dcdde1',
-    fontSize: '1rem',
-  },
-  button: {
-    padding: '0.75rem',
-    backgroundColor: '#2c3e50',
-    color: 'white',
-    border: 'none',
-    borderRadius: '4px',
-    fontSize: '1rem',
-    cursor: 'pointer',
-    transition: 'background-color 0.3s',
-  },
-  error: {
-    backgroundColor: '#ff7675',
-    color: 'white',
-    padding: '0.75rem',
-    borderRadius: '4px',
-    marginBottom: '1rem',
-    textAlign: 'center',
-  },
+    return (
+        <Container component="main" maxWidth="xs">
+            <Box
+                sx={{
+                    marginTop: 8,
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                }}
+            >
+                <Paper elevation={3} sx={{ p: 4, width: '100%' }}>
+                    <Typography component="h1" variant="h5" align="center" sx={{ mb: 3 }}>
+                        Sign in to Blu Reserve
+                    </Typography>
+                    
+                    {error && (
+                        <Alert severity="error" sx={{ mb: 2 }}>
+                            {error}
+                        </Alert>
+                    )}
+
+                    <Box component="form" onSubmit={handleSubmit} noValidate>
+                        <TextField
+                            margin="normal"
+                            required
+                            fullWidth
+                            id="email"
+                            label="Email Address"
+                            name="email"
+                            autoComplete="email"
+                            autoFocus
+                            value={email}
+                            onChange={(e) => setEmail(e.target.value)}
+                            disabled={loading}
+                        />
+                        <TextField
+                            margin="normal"
+                            required
+                            fullWidth
+                            name="password"
+                            label="Password"
+                            type="password"
+                            id="password"
+                            autoComplete="current-password"
+                            value={password}
+                            onChange={(e) => setPassword(e.target.value)}
+                            disabled={loading}
+                        />
+                        <Button
+                            type="submit"
+                            fullWidth
+                            variant="contained"
+                            sx={{ mt: 3, mb: 2, py: 1.5 }}
+                            disabled={loading}
+                        >
+                            {loading ? (
+                                <CircularProgress size={24} color="inherit" />
+                            ) : (
+                                'Sign In'
+                            )}
+                        </Button>
+
+                        <Box sx={{ textAlign: 'center', mt: 2 }}>
+                            <Link
+                                component={RouterLink}
+                                to="/register"
+                                variant="body2"
+                                sx={{
+                                    textDecoration: 'none',
+                                    '&:hover': {
+                                        textDecoration: 'underline'
+                                    }
+                                }}
+                            >
+                                Don't have an account? Register
+                            </Link>
+                        </Box>
+                    </Box>
+                </Paper>
+            </Box>
+        </Container>
+    );
 };
 
 export default Login;
