@@ -105,20 +105,31 @@ async def get_my_bookings(
             {"user_id": str(current_user["_id"])}
         ).sort("booking_date", -1))
 
-        return [
-            {
+        formatted_bookings = []
+        for booking in bookings:
+            # Calculate booking_end if it doesn't exist
+            if 'booking_end' not in booking:
+                booking_date = booking['booking_date']
+                duration = booking.get('duration_minutes', 30)  # default to 30 if not found
+                booking_end = booking_date + timedelta(minutes=duration)
+            else:
+                booking_end = booking['booking_end']
+
+            formatted_booking = {
                 "id": str(booking["_id"]),
                 "user_id": booking["user_id"],
                 "seat_ids": booking["seat_ids"],
                 "booking_date": booking["booking_date"],
-                "booking_end": booking["booking_end"],
-                "duration_minutes": booking["duration_minutes"],
-                "total_cost": booking["total_cost"],
-                "status": booking["status"],
-                "created_at": booking["created_at"]
+                "booking_end": booking_end,
+                "duration_minutes": booking.get("duration_minutes", 30),
+                "total_cost": booking.get("total_cost", 0),
+                "status": booking.get("status", "active"),
+                "created_at": booking.get("created_at", booking["booking_date"])
             }
-            for booking in bookings
-        ]
+            formatted_bookings.append(formatted_booking)
+
+        return formatted_bookings
+
     except Exception as e:
         logger.error(f"Error fetching bookings: {str(e)}", exc_info=True)
         raise HTTPException(status_code=500, detail=str(e))

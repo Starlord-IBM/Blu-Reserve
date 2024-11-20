@@ -59,7 +59,6 @@ from datetime import datetime
 from pydantic import BaseModel
 from typing import List
 from datetime import datetime
-
 class BookingBase(BaseModel):
     seat_ids: List[str]
     booking_date: datetime
@@ -73,6 +72,7 @@ class BookingResponse(BookingBase):
     id: str
     user_id: str
     status: str
+    booking_end: Optional[datetime] = None
     created_at: datetime
 
     class Config:
