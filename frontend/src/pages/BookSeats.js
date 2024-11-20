@@ -76,14 +76,23 @@ const BookSeats = () => {
             setLoading(true);
             setError('');
     
-            // Convert local date/time to UTC
             const bookingDate = new Date(selectedDate);
             const [hours, minutes] = selectedTime.split(':');
             bookingDate.setHours(parseInt(hours), parseInt(minutes), 0, 0);
             
+            // Get the seat numbers along with IDs
+            const selectedSeatsInfo = selectedSeats.map(seatId => {
+                const seat = seats.find(s => s.id === seatId);
+                return {
+                    id: seatId,
+                    seat_number: seat.seat_number // Store the actual seat number (A001, etc.)
+                };
+            });
+    
             const bookingData = {
-                seat_ids: selectedSeats,
-                booking_date: bookingDate.toISOString(), // This will convert to UTC
+                seat_ids: selectedSeatsInfo.map(s => s.id),
+                seat_numbers: selectedSeatsInfo.map(s => s.seat_number), // Add this field
+                booking_date: bookingDate.toISOString(),
                 duration_minutes: parseInt(selectedDuration),
                 total_cost: parseFloat(calculateTotalCost())
             };
