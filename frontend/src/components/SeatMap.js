@@ -1,116 +1,343 @@
+
+// import React from 'react';
+
+// const SeatMap = ({ seats, selectedSeats, onSeatSelect }) => {
+//     const arrangeSeatsInCircles = () => {
+//         const centerX = 400; // Center point X
+//         const centerY = 400; // Center point Y
+//         const poolRadius = 100; // Pool radius
+
+//         // Define three concentric circles
+//         const circles = [
+//             { radius: poolRadius + 80, seats: 24 },  // Inner circle
+//             { radius: poolRadius + 160, seats: 32 }, // Middle circle
+//             { radius: poolRadius + 240, seats: 40 }  // Outer circle
+//         ];
+
+//         let arrangedSeats = [];
+//         let seatIndex = 0;
+
+//         circles.forEach((circle, circleIndex) => {
+//             for (let i = 0; i < circle.seats && seatIndex < seats.length; i++) {
+//                 const angle = (i * 2 * Math.PI) / circle.seats;
+//                 const x = centerX + circle.radius * Math.cos(angle);
+//                 const y = centerY + circle.radius * Math.sin(angle);
+                
+//                 if (seatIndex < seats.length) {
+//                     arrangedSeats.push({
+//                         ...seats[seatIndex],
+//                         x,
+//                         y
+//                     });
+//                     seatIndex++;
+//                 }
+//             }
+//         });
+
+//         return arrangedSeats;
+//     };
+
+//     const handleSeatClick = (seatId) => {
+//         const seat = seats.find(s => s.id === seatId);
+//         if (seat && seat.status === "available") {
+//             onSeatSelect(seatId);
+//         }
+//     };
+
+//     const arrangedSeats = arrangeSeatsInCircles();
+
+//     return (
+//         <div style={styles.container}>
+//             {/* Pool in center */}
+//             <div style={styles.pool}>
+//                 <div style={styles.poolInner}>Pool</div>
+//             </div>
+
+//             {/* Seats arranged in circles */}
+//             {arrangedSeats.map((seat) => {
+//                 const isSelected = selectedSeats.includes(seat.id);
+//                 const isUnavailable = seat.status === "unavailable";
+
+//                 return (
+//                     <div
+//                         key={seat.id}
+//                         style={{
+//                             ...styles.seat,
+//                             left: `${seat.x}px`,
+//                             top: `${seat.y}px`,
+//                             backgroundColor: isSelected ? '#2ecc71' : 
+//                                            isUnavailable ? '#95a5a6' : '#3498db',
+//                             cursor: isUnavailable ? 'not-allowed' : 'pointer',
+//                             transform: 'translate(-50%, -50%)'
+//                         }}
+//                         onClick={() => handleSeatClick(seat.id)}
+//                     >
+//                         {seat.seat_number}
+//                     </div>
+//                 );
+//             })}
+
+//             {/* Legend */}
+//             <div style={styles.legend}>
+//                 <div style={styles.legendItem}>
+//                     <div style={{...styles.legendBox, backgroundColor: '#3498db'}}></div>
+//                     <span>Available</span>
+//                 </div>
+//                 <div style={styles.legendItem}>
+//                     <div style={{...styles.legendBox, backgroundColor: '#2ecc71'}}></div>
+//                     <span>Selected</span>
+//                 </div>
+//                 <div style={styles.legendItem}>
+//                     <div style={{...styles.legendBox, backgroundColor: '#95a5a6'}}></div>
+//                     <span>Unavailable</span>
+//                 </div>
+//             </div>
+//         </div>
+//     );
+// };
+
+// const styles = {
+//     legend: {
+//         position: 'absolute',
+//         bottom: '-60px', // Moved further down
+//         left: '50%',
+//         transform: 'translateX(-50%)',
+//         display: 'flex',
+//         gap: '20px',
+//         padding: '10px 20px',
+//         backgroundColor: 'white',
+//         borderRadius: '8px',
+//         boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+//         zIndex: 3, // Ensure legend stays on top
+//     },
+//     container: {
+//         position: 'relative',
+//         width: '800px',
+//         height: '800px',
+//         margin: '0 auto 80px', // Added bottom margin to account for legend
+//         backgroundColor: '#f8f9fa',
+//         borderRadius: '8px',
+//         overflow: 'visible', // Changed from 'hidden' to show legend
+//     },
+//     pool: {
+//         position: 'absolute',
+//         top: '50%',
+//         left: '50%',
+//         transform: 'translate(-50%, -50%)',
+//         width: '200px',
+//         height: '200px',
+//         backgroundColor: '#74b9ff',
+//         borderRadius: '50%',
+//         display: 'flex',
+//         alignItems: 'center',
+//         justifyContent: 'center',
+//         zIndex: 1,
+//         boxShadow: 'inset 0 0 20px rgba(0,0,0,0.1)',
+//     },
+//     poolInner: {
+//         color: 'white',
+//         fontSize: '1.5rem',
+//         fontWeight: 'bold',
+//     },
+//     seat: {
+//         position: 'absolute',
+//         width: '40px',
+//         height: '40px',
+//         borderRadius: '8px',
+//         display: 'flex',
+//         alignItems: 'center',
+//         justifyContent: 'center',
+//         color: 'white',
+//         fontWeight: 'bold',
+//         fontSize: '0.8rem',
+//         transition: 'all 0.3s ease',
+//         boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+//         zIndex: 2,
+//     },
+//     legendItem: {
+//         display: 'flex',
+//         alignItems: 'center',
+//         gap: '8px',
+//     },
+//     legendBox: {
+//         width: '20px',
+//         height: '20px',
+//         borderRadius: '4px',
+//     }
+// };
+
+// export default SeatMap;
+
 import React from 'react';
-import { Grid, Button, Paper, Typography, Box } from '@mui/material';
 
 const SeatMap = ({ seats, selectedSeats, onSeatSelect }) => {
-    // Group seats into rows (assuming 8 seats per row)
-    const seatsPerRow = 8;
-    const rows = [];
-    for (let i = 0; i < seats.length; i += seatsPerRow) {
-        rows.push(seats.slice(i, i + seatsPerRow));
-    }
+    const arrangeSeatsInCircles = () => {
+        const centerX = 400;
+        const centerY = 400;
+        const poolRadius = 100;
+
+        const circles = [
+            { radius: poolRadius + 80, seats: 24 },
+            { radius: poolRadius + 160, seats: 32 },
+            { radius: poolRadius + 240, seats: 40 }
+        ];
+
+        let arrangedSeats = [];
+        let seatIndex = 0;
+
+        circles.forEach((circle) => {
+            for (let i = 0; i < circle.seats && seatIndex < seats.length; i++) {
+                const angle = (i * 2 * Math.PI) / circle.seats;
+                const x = centerX + circle.radius * Math.cos(angle);
+                const y = centerY + circle.radius * Math.sin(angle);
+                
+                if (seatIndex < seats.length) {
+                    arrangedSeats.push({
+                        ...seats[seatIndex],
+                        x,
+                        y
+                    });
+                    seatIndex++;
+                }
+            }
+        });
+
+        return arrangedSeats;
+    };
 
     const handleSeatClick = (seatId) => {
-        // Only allow selection of available seats
         const seat = seats.find(s => s.id === seatId);
         if (seat && seat.status === "available") {
             onSeatSelect(seatId);
         }
     };
 
+    const formatSeatNumber = (seatNumber) => {
+        // Extract the seat number portion
+        const match = seatNumber.match(/[ABC]\d+/);
+        return match ? match[0] : seatNumber;
+    };
+
+    const arrangedSeats = arrangeSeatsInCircles();
+
     return (
-        <Paper elevation={3} sx={{ p: 3, backgroundColor: 'grey.50' }}>
-            <Typography variant="h6" gutterBottom>
-                Select Seats
-            </Typography>
+        <div style={styles.container}>
+            {/* Pool in center */}
+            <div style={styles.pool}>
+                <div style={styles.poolInner}>Pool</div>
+            </div>
+
+            {/* Seats arranged in circles */}
+            {arrangedSeats.map((seat) => {
+                const isSelected = selectedSeats.includes(seat.id);
+                const isUnavailable = seat.status === "unavailable";
+
+                return (
+                    <div
+                        key={seat.id}
+                        style={{
+                            ...styles.seat,
+                            left: `${seat.x}px`,
+                            top: `${seat.y}px`,
+                            backgroundColor: isSelected ? '#2ecc71' : 
+                                           isUnavailable ? '#95a5a6' : '#3498db',
+                            cursor: isUnavailable ? 'not-allowed' : 'pointer',
+                            transform: 'translate(-50%, -50%)'
+                        }}
+                        onClick={() => handleSeatClick(seat.id)}
+                    >
+                        {formatSeatNumber(seat.seat_number)}
+                    </div>
+                );
+            })}
 
             {/* Legend */}
-            <Box sx={{ mb: 3, display: 'flex', gap: 3, alignItems: 'center' }}>
-                <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                    <Box sx={{ 
-                        width: 20, 
-                        height: 20, 
-                        backgroundColor: 'grey.300', 
-                        mr: 1 
-                    }} />
-                    <Typography variant="body2">Unavailable</Typography>
-                </Box>
-                <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                    <Box sx={{ 
-                        width: 20, 
-                        height: 20, 
-                        border: '1px solid',
-                        borderColor: 'primary.main',
-                        mr: 1 
-                    }} />
-                    <Typography variant="body2">Available</Typography>
-                </Box>
-                <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                    <Box sx={{ 
-                        width: 20, 
-                        height: 20, 
-                        backgroundColor: 'primary.main',
-                        mr: 1 
-                    }} />
-                    <Typography variant="body2">Selected</Typography>
-                </Box>
-            </Box>
-
-            {/* Screen representation */}
-            <Box sx={{ 
-                width: '100%', 
-                height: '20px', 
-                backgroundColor: 'grey.300',
-                borderRadius: '4px',
-                mb: 4,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center'
-            }}>
-                <Typography variant="caption" color="text.secondary">
-                    SCREEN
-                </Typography>
-            </Box>
-
-            {/* Seat grid */}
-            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                {rows.map((row, rowIndex) => (
-                    <Grid container spacing={2} key={rowIndex} justifyContent="center">
-                        {row.map((seat) => {
-                            const isSelected = selectedSeats.includes(seat.id);
-                            const isUnavailable = seat.status === "unavailable";
-
-                            return (
-                                <Grid item key={seat.id}>
-                                    <Button
-                                        variant={isSelected ? "contained" : "outlined"}
-                                        onClick={() => handleSeatClick(seat.id)}
-                                        disabled={isUnavailable}
-                                        sx={{
-                                            minWidth: '48px',
-                                            height: '48px',
-                                            p: 0,
-                                            backgroundColor: isUnavailable ? 'grey.300' : 
-                                                           isSelected ? 'primary.main' : 'transparent',
-                                            '&:disabled': {
-                                                backgroundColor: 'grey.300',
-                                                color: 'grey.500'
-                                            },
-                                            '&:hover': {
-                                                backgroundColor: isSelected ? 'primary.dark' : 
-                                                               isUnavailable ? 'grey.300' : 'primary.50'
-                                            }
-                                        }}
-                                    >
-                                        {seat.seat_number}
-                                    </Button>
-                                </Grid>
-                            );
-                        })}
-                    </Grid>
-                ))}
-            </Box>
-        </Paper>
+            <div style={styles.legend}>
+                <div style={styles.legendItem}>
+                    <div style={{...styles.legendBox, backgroundColor: '#3498db'}}></div>
+                    <span>Available</span>
+                </div>
+                <div style={styles.legendItem}>
+                    <div style={{...styles.legendBox, backgroundColor: '#2ecc71'}}></div>
+                    <span>Selected</span>
+                </div>
+                <div style={styles.legendItem}>
+                    <div style={{...styles.legendBox, backgroundColor: '#95a5a6'}}></div>
+                    <span>Unavailable</span>
+                </div>
+            </div>
+        </div>
     );
+};
+
+const styles = {
+    container: {
+        position: 'relative',
+        width: '800px',
+        height: '800px',
+        margin: '0 auto 80px',
+        backgroundColor: '#f8f9fa',
+        borderRadius: '8px',
+        overflow: 'visible',
+    },
+    pool: {
+        position: 'absolute',
+        top: '50%',
+        left: '50%',
+        transform: 'translate(-50%, -50%)',
+        width: '200px',
+        height: '200px',
+        backgroundColor: '#74b9ff',
+        borderRadius: '50%',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        zIndex: 1,
+        boxShadow: 'inset 0 0 20px rgba(0,0,0,0.1)',
+    },
+    poolInner: {
+        color: 'white',
+        fontSize: '1.5rem',
+        fontWeight: 'bold',
+    },
+    seat: {
+        position: 'absolute',
+        width: '40px',
+        height: '40px',
+        borderRadius: '8px',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        color: 'white',
+        fontWeight: 'bold',
+        fontSize: '0.8rem',
+        transition: 'all 0.3s ease',
+        boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+        zIndex: 2,
+    },
+    legend: {
+        position: 'absolute',
+        bottom: '-60px',
+        left: '50%',
+        transform: 'translateX(-50%)',
+        display: 'flex',
+        gap: '20px',
+        padding: '10px 20px',
+        backgroundColor: 'white',
+        borderRadius: '8px',
+        boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+        zIndex: 3,
+    },
+    legendItem: {
+        display: 'flex',
+        alignItems: 'center',
+        gap: '8px',
+    },
+    legendBox: {
+        width: '20px',
+        height: '20px',
+        borderRadius: '4px',
+    }
 };
 
 export default SeatMap;
